@@ -1,15 +1,17 @@
 {
-  description = "A very basic flake";
+  description = "";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    systems.url = "github:usertam/nix-systems";
   };
 
-  outputs = { self, nixpkgs }: {
-
-    packages.x86_64-linux.hello = nixpkgs.legacyPackages.x86_64-linux.hello;
-
-    packages.x86_64-linux.default = self.packages.x86_64-linux.hello;
-
+  outputs = { self, nixpkgs, systems }: let
+    forAllSystems = with nixpkgs.lib; genAttrs systems.systems;
+    forAllPkgs = pkgsWith: forAllSystems (system: pkgsWith nixpkgs.legacyPackages.${system});
+  in {
+    packages = forAllPkgs (pkgs: rec {
+      default = pkgs.hello;
+    });
   };
 }
